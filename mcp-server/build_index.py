@@ -29,9 +29,17 @@ from chunk_docs import get_all_chunks, compute_docs_hash
 MCP_SERVER_DIR = Path(__file__).parent
 CHROMA_DB_DIR = MCP_SERVER_DIR / "chroma_db"
 INDEX_META_FILE = MCP_SERVER_DIR / "index_meta.json"
+SUMMARIES_FILE = MCP_SERVER_DIR / "summaries.json"
 
 # Collection name
 COLLECTION_NAME = "jira_docs"
+
+
+def load_summaries() -> dict:
+    """Load summaries if file exists."""
+    if SUMMARIES_FILE.exists():
+        return json.loads(SUMMARIES_FILE.read_text())
+    return {}
 
 
 def get_embedding_function(backend: str):
@@ -128,6 +136,11 @@ def build_index(backend: str = "sentence-transformers", force: bool = False):
     chunks = list(get_all_chunks())
     print(f"Processing {len(chunks)} chunks...")
 
+    # Load summaries if available
+    summaries = load_summaries()
+    if summaries:
+        print(f"Loaded {len(summaries)} summaries")
+
     # Truncate oversized chunks for OpenAI (8192 token limit, ~4 chars/token)
     if backend == "openai":
         max_chars = 25000  # ~6250 tokens, safe margin
@@ -137,12 +150,21 @@ def build_index(backend: str = "sentence-transformers", force: bool = False):
 
     # Batch insert (ChromaDB handles batching internally, but we'll show progress)
     batch_size = 100
+    summaries_added = 0
     for i in range(0, len(chunks), batch_size):
         batch = chunks[i:i + batch_size]
 
         ids = [c["id"] for c in batch]
         documents = [c["content"] for c in batch]
-        metadatas = [c["metadata"] for c in batch]
+
+        # Add summary to metadata if available
+        metadatas = []
+        for c in batch:
+            meta = c["metadata"].copy()
+            if c["id"] in summaries:
+                meta["summary"] = summaries[c["id"]]
+                summaries_added += 1
+            metadatas.append(meta)
 
         collection.add(
             ids=ids,
@@ -151,6 +173,9 @@ def build_index(backend: str = "sentence-transformers", force: bool = False):
         )
 
         print(f"  Indexed {min(i + batch_size, len(chunks))}/{len(chunks)} chunks")
+
+    if summaries_added:
+        print(f"  Added summaries to {summaries_added} chunks")
 
     # Save metadata
     save_index_meta({

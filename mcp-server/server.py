@@ -356,7 +356,7 @@ async def handle_search(arguments: dict):
             output_parts.append("\n---\n")
     else:
         # Lightweight mode (default) - table format
-        output_parts.append("| # | Score | ID | Sections | Snippet |")
+        output_parts.append("| # | Score | ID | Sections | Summary |")
         output_parts.append("|---|-------|-----|----------|---------|")
 
         for i, (doc_id, doc, meta, distance) in enumerate(zip(
@@ -370,12 +370,21 @@ async def handle_search(arguments: dict):
             sections_str = ", ".join(sections[:5]) if sections else "-"
             if len(sections) > 5:
                 sections_str += f" (+{len(sections)-5} more)"
-            snippet = make_snippet(doc)
-            # Escape pipes in snippet for table
-            snippet = snippet.replace("|", "\\|")
+
+            # Use summary if available, otherwise fall back to auto-generated snippet
+            summary = meta.get("summary")
+            if summary:
+                preview = summary
+            else:
+                preview = make_snippet(doc)
+
+            # Escape pipes for table and truncate if needed
+            preview = preview.replace("|", "\\|")
+            if len(preview) > 200:
+                preview = preview[:200] + "..."
 
             output_parts.append(
-                f"| {i+1} | {similarity:.2f} | `{doc_id}` | {sections_str} | {snippet} |"
+                f"| {i+1} | {similarity:.2f} | `{doc_id}` | {sections_str} | {preview} |"
             )
 
         output_parts.append("")
