@@ -92,9 +92,9 @@ def get_collection():
 
 
 def extract_sections(content: str) -> list[str]:
-    """Extract section headers (###, ####, or #####) from content."""
-    # Match headers like "### Parameters" or "#### Conditions ####" or "##### Always false #####"
-    headers = re.findall(r'^#{3,5}\s+(.+?)(?:\s*#{3,5})?\s*$', content, re.MULTILINE)
+    """Extract section headers (##, ###, ####, or #####) from content."""
+    # Match headers like "## Properties", "### Parameters", "#### Conditions ####"
+    headers = re.findall(r'^#{2,5}\s+(.+?)(?:\s*#{2,5})?\s*$', content, re.MULTILINE)
     # Deduplicate while preserving order
     seen = set()
     unique = []
