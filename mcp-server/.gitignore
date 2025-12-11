@@ -1,0 +1,21 @@
+# Virtual environment
+.venv/
+
+# ChromaDB index (rebuild with setup.sh)
+chroma_db/
+
+# Index metadata (rebuild with setup.sh)
+index_meta.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
