@@ -58,19 +58,51 @@ If you prefer to configure manually, add to `~/.claude/settings.json`:
 
 ### `search`
 
-Search Jira API documentation semantically.
+Search Jira API documentation semantically. Returns lightweight results by default (score, sections, snippet).
 
 **Parameters:**
 - `query` (required): Natural language search query
 - `top_k` (optional): Number of results (default: 5, max: 20)
 - `api_version` (optional): Filter by "v2" or "v3"
 - `doc_type` (optional): Filter by "api" (endpoints) or "model" (data structures)
+- `include_content` (optional): Include full content in results (default: false)
 
 **Example queries:**
 - "create an issue with custom fields"
 - "filter board by sprint"
 - "IssueBean fields and properties"
 - "transition issue workflow"
+
+### `get_chunk`
+
+Fetch full content of a specific chunk by ID. Use after `search` to get complete documentation.
+
+**Parameters:**
+- `chunk_id` (required): The chunk ID from search results (e.g., `v3/WorkflowsApi/createWorkflow`)
+
+### `list_endpoints`
+
+List API endpoint files matching a regex pattern.
+
+**Parameters:**
+- `pattern` (required): Regex pattern (case-insensitive), e.g., `filter`, `issue.*search`, `^Work`
+- `api_version` (optional): Filter by "v2" or "v3"
+
+### `list_models`
+
+List data model files matching a regex pattern.
+
+**Parameters:**
+- `pattern` (required): Regex pattern (case-insensitive), e.g., `filter`, `issue.*bean`, `^User`
+- `api_version` (optional): Filter by "v2" or "v3"
+
+### `get_model`
+
+Get the full content of a specific data model by name.
+
+**Parameters:**
+- `name` (required): Model name (e.g., `Filter`, `IssueBean`, `User`)
+- `api_version` (optional): "v3" (default) or "v2"
 
 ## How It Works
 
