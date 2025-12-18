@@ -16,8 +16,16 @@ jira-cloud-rest-api/
 │   ├── Models/            # 898 data model definitions
 │   ├── openapi.json       # Source OpenAPI specification
 │   └── README.md          # Auto-generated index
-└── mcp-server/            # MCP server for semantic search
-    └── README.md          # Setup & usage instructions
+├── mcp-server/            # MCP server for semantic search
+│   ├── setup.sh           # One-command installation
+│   ├── server.py          # MCP server implementation
+│   └── README.md          # Setup & usage instructions
+└── claude-integration/    # Claude Code integration
+    ├── CLAUDE.md          # Instructions snippet for ~/.claude/CLAUDE.md
+    └── .claude/skills/jira-api-docs/
+        ├── SKILL.md       # Skill definition
+        ├── quick-reference/  # Task → script mappings
+        └── scripts/       # Pre-tested automation scripts
 ```
 
 ## API Documentation
@@ -55,15 +63,60 @@ Each file defines one data structure used in API requests/responses:
 - Most endpoints exist in both versions with identical functionality
 - Some newer features are v3-only
 
-## MCP Server
+## Claude Integration
 
-The `mcp-server/` directory contains an MCP (Model Context Protocol) server that enables semantic search over this documentation. See [`mcp-server/README.md`](mcp-server/README.md) for setup and usage.
+The `claude-integration/` directory contains everything needed to integrate this documentation with Claude Code:
+- **MCP server** for semantic search over API docs
+- **Skill** with quick-reference guides and tested scripts
+- **CLAUDE.md snippet** with instructions for working with Jira APIs
 
-**Quick start:**
+### Full Setup
+
 ```bash
+# 1. Clone the repo
+git clone https://github.com/shitchell/jira-cloud-rest-api.git
+cd jira-cloud-rest-api
+
+# 2. Set up the MCP server
 cd mcp-server && ./setup.sh
 claude mcp add jira-docs .venv/bin/python "$(pwd)/server.py"
+cd ..
+
+# 3. Install the skill (copy to ~/.claude/skills/)
+cp -r ./claude-integration/.claude/skills/jira-api-docs/ ~/.claude/skills/
+
+# 4. Fix the api-reference symlink to point to this repo
+rm ~/.claude/skills/jira-api-docs/api-reference
+ln -s "$(pwd)" ~/.claude/skills/jira-api-docs/api-reference
+
+# 5. Add the CLAUDE.md snippet to your global instructions
+cat ./claude-integration/CLAUDE.md >> ~/.claude/CLAUDE.md
 ```
+
+### What Each Step Does
+
+**Step 2: MCP Server** - Provides semantic search over 2900+ API documentation chunks. Claude can query endpoints, models, and usage patterns via the `jira-docs` MCP server.
+
+**Step 3: Skill Installation** - Copies the `jira-api-docs` skill which includes:
+- Quick-reference guides mapping tasks to working scripts
+- Pre-tested scripts for common operations (workflows, projects, filters)
+- API reference navigation for complex tasks
+
+**Step 4: Symlink Fix** - The skill references `api-reference/` which needs to point to the actual repo location on your machine.
+
+**Step 5: CLAUDE.md Snippet** - Adds instructions telling Claude when/how to use the skill and MCP server for Jira tasks.
+
+### Setup Options
+
+```bash
+# MCP: Use OpenAI embeddings (better quality, requires API key)
+OPENAI_API_KEY=sk-... ./mcp-server/setup.sh --openai
+
+# MCP: Force rebuild index after doc changes
+./mcp-server/setup.sh --force
+```
+
+See [`mcp-server/README.md`](mcp-server/README.md) for detailed MCP server configuration.
 
 ## Source
 
